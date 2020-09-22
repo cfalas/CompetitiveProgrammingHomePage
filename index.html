@@ -134,7 +134,7 @@
 				document.body.background = 'wall/' + num + '.png';
 			}
 
-			$.get("http://api.quotable.io/random?tags=inspirational&maxLength=75", function (res) {
+			$.get("https://api.quotable.io/random?tags=inspirational&maxLength=75", function (res) {
 				document.getElementById("quote").innerHTML = res['content'] + ' <br> <span style="position: relative; left: 10%;">—' + res['author'] + '</span>'
 			})
 
