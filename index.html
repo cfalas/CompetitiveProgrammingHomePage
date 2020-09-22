@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+	<meta charset="utf-8"/>
+	<script src="jquery.min.js"></script>
+	<script src="//cdnjs.cloudflare.com/ajax/libs/seedrandom/3.0.5/seedrandom.min.js"></script>
+	<title>New Tab</title>
+	<style>
+		#problem-container {
+			display: grid;
+			grid-template-columns: auto auto auto auto auto;
+			padding: 10px;
+		}
+
+		.problem {
+			background-color: rgba(255, 255, 255, 0.8);
+			border: 1px solid rgba(0, 0, 0, 0.8);
+			padding: 20px;
+			font-size: 30px;
+			text-align: center;
+		}
+
+		.solved {
+			background-color: rgb(27, 119, 27);
+		}
+
+		.waed {
+			background-color: rgb(206, 71, 38);
+		}
+
+		.clock {
+			position: relative;
+			top: 50%;
+			transform: translateY(-50%);
+			text-align: center;
+		}
+
+		.clock-container {
+			height: 100vh;
+		}
+
+		#quote {
+			font-size: 1.2vw;
+			font-weight: bold;
+			-webkit-text-stroke-width: 1px;
+			-webkit-text-stroke-color: white;
+		}
+
+		html,
+		body {
+			background-color: #69bbff;
+			background-attachment: fixed;
+			background-image: url('https://picsum.photos/1920/1080');
+			padding: 0;
+			margin: 0;
+			font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
+		}
+
+		#txt {
+			font-size: 10vw;
+			-webkit-text-stroke-width: 5px;
+			-webkit-text-stroke-color: white;
+		}
+
+		.tab-container {
+			display: table;
+			width: 50%;
+			table-layout: fixed;
+			border-spacing: 10px;
+			margin-left: 25%;
+			margin-right: 25%;
+		}
+
+		.tab {
+			display: table-cell;
+
+		}
+
+		.tab img {
+			min-width: 5vw;
+			max-height: 15vh;
+
+			background-color: white;
+			color: rgb(98, 98, 98);
+			box-shadow: 0px 0px 10px 10px;
+			border-radius: 10px;
+			padding: 5px;
+
+		}
+	</style>
+	<script>
+		function startTime() {
+			var today = new Date();
+			var h = today.getHours();
+			var m = today.getMinutes();
+			var s = today.getSeconds();
+			m = checkTime(m);
+			s = checkTime(s);
+			document.getElementById('txt').innerHTML =
+				h + ":" + m + ":" + s;
+			var t = setTimeout(startTime, 500);
+		}
+		function checkTime(i) {
+			if (i < 10) { i = "0" + i };  // add zero in front of numbers < 10
+			return i;
+		}
+	</script>
+
+	<script>
+		let current_diff = 1700;
+		let cf_handle = 'cfalas';
+		let use_saved_walls = true;
+		let num_walls = 100;
+
+		function get_div(c, i, solved, waed) {
+			if (solved) {
+				return '<a href=\'https://codeforces.com/problemset/problem/' + c + '/' + i + '\'><div class=\'problem solved\'>' + c + i + '</div></a>'
+			}
+			if (waed) {
+				return '<a href=\'https://codeforces.com/problemset/problem/' + c + '/' + i + '\'><div class=\'problem waed\'>' + c + i + '</div></a>'
+			}
+			else {
+				return '<a href=\'https://codeforces.com/problemset/problem/' + c + '/' + i + '\'><div class=\'problem\'>' + c + i + '</div></a>'
+			}
+		}
+
+		$(document).ready(function () {
+			var myrng = new Math.seedrandom(cf_handle);
+			var problems;
+
+			if(use_saved_walls){
+				var num = Math.ceil(Math.random() * 100);
+				document.body.background = 'wall/' + num + '.png';
+			}
+
+			$.get("http://api.quotable.io/random?tags=inspirational&maxLength=75", function (res) {
+				document.getElementById("quote").innerHTML = res['content'] + ' <br> <span style="position: relative; left: 10%;">—' + res['author'] + '</span>'
+			})
+
+			$.get("https://codeforces.com/api/user.status?handle=" + cf_handle).then(function (submissions) {
+				aced_problems = []
+				waed_problems = []
+				submissions = submissions['result']
+				for (i in submissions) {
+					submission = submissions[i]
+					problem = submission['problem']
+					if (submission['verdict'] == 'OK') {
+						aced_problems.push(problem['contestId'] + problem['index'])
+					}
+					else {
+						waed_problems.push(problem['contestId'] + problem['index'])
+					}
+				}
+				$.get("https://codeforces.com/api/problemset.problems", function (text) {
+					problems = text['result']['problems'];
+					filtered_problems = problems.filter(function (val) {
+						return val['rating'] == current_diff && !(val['tags'].includes('*special'));
+					})
+					console.log(filtered_problems.length)
+					var selected_problems = [];
+					while (selected_problems.length < 50) {
+						var index = Math.abs(myrng.int32()) % filtered_problems.length
+						while (index in selected_problems) {
+							index = Math.abs(myrng.int32()) % filtered_problems.length
+						}
+
+						selected_problems.push(index)
+					}
+
+					for (p_i in selected_problems) {
+						p_index = filtered_problems.length - selected_problems[p_i]
+						let problem = filtered_problems[p_index]
+						problem_id = problem['contestId'] + problem['index']
+						console.log(problem_id);
+						var aced = aced_problems.includes(problem_id);
+						var waed = waed_problems.includes(problem_id)
+						$("#problem-container").append(get_div(problem['contestId'], problem['index'], aced, waed))
+					}
+				})
+			});
+		});
+
+	</script>
+</head>
+
+<body onload="startTime()">
+	<div class='clock-container'>
+		<div class="clock">
+			<span id='txt'></span><br>
+			<span id="quote"></span>
+		</div>
+
+	</div>
+	<div id="problem-container">
+	</div>
+</body>
+
+</html>
