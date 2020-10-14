@@ -51,7 +51,6 @@
 		body {
 			background-color: #69bbff;
 			background-attachment: fixed;
-			background-image: url('https://picsum.photos/1920/1080');
 			background-size: cover;
 			padding: 0;
 			margin: 0;
@@ -85,8 +84,9 @@
 	<script>
 		let current_diff = 1700;
 		let cf_handle = 'cfalas';
-		let use_saved_walls = false;
+		let use_saved_walls = true;
 		let num_walls = 100;
+
 
 		function get_div(c, i, solved, waed) {
 			if (solved) {
@@ -108,6 +108,7 @@
 				var num = Math.ceil(Math.random() * 100);
 				document.body.background = 'wall/' + num + '.png';
 			}
+
 
 			$.get("https://api.quotable.io/random?tags=inspirational&maxLength=75", function (res) {
 				document.getElementById("quote").innerHTML = res['content'] + ' <br> <span style="position: relative; left: 10%;">—' + res['author'] + '</span>'
@@ -134,10 +135,17 @@
 					})
 					console.log(filtered_problems.length)
 					var selected_problems = [];
+					console.log(window.localStorage[current_diff])
+
+					if(!window.localStorage[current_diff]){
+						window.localStorage[current_diff] = filtered_problems.length
+					}
+					let probs_avail = window.localStorage[current_diff]
+
 					while (selected_problems.length < 50) {
-						var index = Math.abs(myrng.int32()) % filtered_problems.length
+						var index = Math.abs(myrng.int32()) % probs_avail
 						while (index in selected_problems) {
-							index = Math.abs(myrng.int32()) % filtered_problems.length
+							index = Math.abs(myrng.int32()) % probs_avail
 						}
 
 						selected_problems.push(index)
